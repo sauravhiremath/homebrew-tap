@@ -3,6 +3,8 @@
 Install the CLI and dashboard for local development services:
 
 ```sh
+brew tap sauravhiremath/tap
+brew trust --formula sauravhiremath/tap/servicemon
 brew install sauravhiremath/tap/servicemon
 ```
 
@@ -12,15 +14,19 @@ The formula builds from source using Homebrew Node and locked dependencies. Inst
 
 ## Formula maintenance
 
-Use `scripts/prepare-formula.mjs` in the source repository with the source archive's `manifest.json` and this directory as `--tap`. Set `--url` to the exact versioned GitHub release asset URL. The generator verifies the archive checksum and refuses to overwrite an existing formula. Preserve each old formula with its matching archive before replacing it.
+Run the **Tap update** workflow for an existing public Servicemon release:
 
 ```sh
-brew style sauravhiremath/tap/servicemon
-brew audit --strict --online --formula sauravhiremath/tap/servicemon
-brew install --build-from-source sauravhiremath/tap/servicemon
-brew test sauravhiremath/tap/servicemon
+gh workflow run tests.yml --repo sauravhiremath/homebrew-tap \
+  -f version=<version> -F publish=false
 ```
 
-The tap workflow checks the formula. Source archive creation and publication commands are in the source repository's [release instructions](https://github.com/sauravhiremath/servicemon/blob/master/docs/releasing.md).
+It downloads the source archive and manifest, verifies the checksum, generates the formula, and runs Homebrew style, online audit, source installation, and functional tests. It saves the checked formula as a seven-day workflow artifact.
+
+To commit the checked update, run the same command with `-F publish=true`. A separate job writes the formula to `main` only after all checks pass. The workflow uses this repository's `GITHUB_TOKEN`; no source-repository token is needed. The source release must already be public.
+
+For local formula generation, use `scripts/prepare-formula.mjs` from the checked source archive. Pass the manifest path with `--manifest` and the tap directory with `--tap`. Set `--url` to the exact versioned release asset URL. Preserve each old formula with its matching archive before replacing it.
+
+Source archive creation and publication commands are in the source repository's [release instructions](https://github.com/sauravhiremath/servicemon/blob/master/docs/releasing.md).
 
 Use current stable release tags for workflow actions, not commit hash pins. Keep source archive checksums and dependency lockfiles.

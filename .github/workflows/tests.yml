@@ -1,16 +1,91 @@
-name: Tap checks
+name: Tap update
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: Published Servicemon version without the v prefix
+        required: true
+        type: string
+      publish:
+        description: Commit and push the checked formula to this tap
+        type: boolean
+        default: false
 permissions:
   contents: read
+concurrency:
+  group: servicemon-tap-update
+  cancel-in-progress: false
 jobs:
-  source:
+  check:
     runs-on: macos-15
+    env:
+      VERSION: ${{ inputs.version }}
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALL_CLEANUP: '1'
+      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: '1'
+      HOMEBREW_NO_AUTOREMOVE: '1'
+    steps:
+      - name: Select Homebrew runtime
+        run: |
+          brew install node
+          echo "$(brew --prefix node)/bin" >> "$GITHUB_PATH"
+      - name: Download and verify the public source release
+        working-directory: ${{ runner.temp }}
+        run: |
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]
+          mkdir source-release
+          cd source-release
+          base="https://github.com/sauravhiremath/servicemon/releases/download/v$VERSION"
+          for file in "servicemon-$VERSION-source.tar.gz" "servicemon-$VERSION-source.tar.gz.sha256" manifest.json; do
+            curl --fail --location "$base/$file" --output "$file"
+          done
+          shasum -a 256 -c "servicemon-$VERSION-source.tar.gz.sha256"
+          jq -e --arg version "$VERSION" '.version == $version and .archive == ("servicemon-" + $version + "-source.tar.gz")' manifest.json
+          tar -xzf "servicemon-$VERSION-source.tar.gz"
+          node "servicemon-$VERSION/scripts/prepare-formula.mjs" \
+            --manifest manifest.json \
+            --tap "$RUNNER_TEMP/checked-tap" \
+            --url "$base/servicemon-$VERSION-source.tar.gz"
+      - name: Check public download and installed formula
+        run: |
+          brew tap-new --no-git servicemon/release
+          cp "$RUNNER_TEMP/checked-tap/Formula/servicemon.rb" "$(brew --repository servicemon/release)/Formula/servicemon.rb"
+          brew trust --formula servicemon/release/servicemon
+          brew style servicemon/release/servicemon
+          brew audit --strict --online --formula servicemon/release/servicemon
+          brew install --build-from-source --yes servicemon/release/servicemon
+          brew test servicemon/release/servicemon
+          brew uninstall servicemon/release/servicemon
+      - uses: actions/upload-artifact@v7
+        with:
+          name: checked-formula
+          path: ${{ runner.temp }}/checked-tap/Formula/servicemon.rb
+          if-no-files-found: error
+          retention-days: 7
+  publish:
+    if: inputs.publish
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ inputs.version }}
     steps:
       - uses: actions/checkout@v7
         with:
-          persist-credentials: false
-      - name: Check formula style
-        run: brew style Formula/servicemon.rb
-      - name: Check source metadata
-        run: brew audit --strict --online --formula Formula/servicemon.rb
+          ref: main
+      - uses: actions/download-artifact@v8
+        with:
+          name: checked-formula
+          path: Formula
+      - name: Commit checked formula
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Formula/servicemon.rb
+          if git diff --cached --quiet; then
+            echo 'The tap already contains this checked formula.'
+            exit 0
+          fi
+          git commit -m "release: servicemon $VERSION"
+          git push origin HEAD:main

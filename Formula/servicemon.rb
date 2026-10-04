@@ -2,7 +2,7 @@ class Servicemon < Formula
   desc "Control local development services with a CLI and dashboard"
   homepage "https://github.com/sauravhiremath/servicemon"
   url "https://github.com/sauravhiremath/servicemon/releases/download/v0.1.0/servicemon-0.1.0-source.tar.gz"
-  sha256 "42d447e543469bcee233db017f594e7fe5bff44ee08835806bb2c0a3f2c32ca0"
+  sha256 "d3594bba62f46e5a67e60f44d3724d92c7e5e7e174a670a3fe12a58606c02ca8"
   license "MIT"
 
   depends_on :macos
@@ -23,7 +23,7 @@ class Servicemon < Formula
     system "npm", "prune", "--offline", "--omit=dev", "--ignore-scripts", "--no-audit", "--no-fund"
     system "node", "scripts/release-check.mjs", "--runtime"
     libexec.install "dist", "node_modules", "package.json", "package-lock.json",
-                    "LICENSE", "CONTRIBUTING.md", "README.md", "CHANGELOG.md"
+                    "LICENSE", "CONTRIBUTING.md", "README.md"
     libexec.install "docs", "examples"
     (libexec/"scripts").install "scripts/smoke-installed.mjs"
     (bin/"servicemon").write <<~SH
