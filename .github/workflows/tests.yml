@@ -1,0 +1,16 @@
+name: Tap checks
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Check formula style
+        run: brew style Formula/servicemon.rb
+      - name: Check source metadata
+        run: brew audit --strict --online --formula Formula/servicemon.rb
