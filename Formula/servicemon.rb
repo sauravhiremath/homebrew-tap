@@ -2,7 +2,7 @@ class Servicemon < Formula
   desc "Control local development services with a CLI and dashboard"
   homepage "https://github.com/sauravhiremath/servicemon"
   url "https://github.com/sauravhiremath/servicemon/releases/download/v0.1.0/servicemon-0.1.0-source.tar.gz"
-  sha256 "d3594bba62f46e5a67e60f44d3724d92c7e5e7e174a670a3fe12a58606c02ca8"
+  sha256 "79bb3cbafa1e3bc0b67ea7e1dbbe29e5a385b0683e7fae0c72be7ae1d88480e1"
   license "MIT"
 
   depends_on :macos
