@@ -1,8 +1,8 @@
 class Servicemon < Formula
   desc "Control local development services with a CLI and dashboard"
   homepage "https://github.com/sauravhiremath/servicemon"
-  url "https://github.com/sauravhiremath/servicemon/releases/download/v0.1.0/servicemon-0.1.0-source.tar.gz"
-  sha256 "79bb3cbafa1e3bc0b67ea7e1dbbe29e5a385b0683e7fae0c72be7ae1d88480e1"
+  url "https://github.com/sauravhiremath/servicemon/releases/download/v0.1.1/servicemon-0.1.1-source.tar.gz"
+  sha256 "3184eb01cae97fa2c7b40520b3404c8ff8e28dc0d7b73df679dbb9ed1590f07c"
   license "MIT"
 
   depends_on :macos
@@ -24,7 +24,7 @@ class Servicemon < Formula
     system "node", "scripts/release-check.mjs", "--runtime"
     libexec.install "dist", "node_modules", "package.json", "package-lock.json",
                     "LICENSE", "CONTRIBUTING.md", "README.md"
-    libexec.install "docs", "examples"
+    libexec.install "docs", "examples", "skills"
     (libexec/"scripts").install "scripts/smoke-installed.mjs"
     (bin/"servicemon").write <<~SH
       #!/bin/sh
@@ -35,14 +35,21 @@ class Servicemon < Formula
 
   def caveats
     <<~EOS
-      Create ~/.config/servicemon/config.yaml before first use.
-      Start explicitly: servicemon serve --background
-      Open the dashboard: servicemon dashboard
-      Login startup is optional: servicemon startup enable
-      Stop the manager before package or Node upgrades.
-      Before removal: servicemon startup disable; servicemon manager stop
-      Config, retained logs, and Compose volumes are not package files.
-      Do not use brew services. Read the installed operations guide.
+      Get started
+        Create ~/.config/servicemon/config.yaml, then run:
+          servicemon serve --background
+          servicemon dashboard
+
+      Agent skill (optional)
+          npx skills add sauravhiremath/servicemon --skill servicemon --global
+
+      Maintenance
+        Use Servicemon commands, not brew services.
+        Stop the manager before Servicemon or Node upgrades.
+        Before uninstalling: servicemon startup disable; servicemon manager stop
+
+      Guide
+        https://github.com/sauravhiremath/servicemon#first-use
     EOS
   end
 
