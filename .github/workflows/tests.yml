@@ -7,7 +7,7 @@ on:
         required: true
         type: string
       publish:
-        description: Commit and push the checked formula to this tap
+        description: Commit and push the checked Servicemon formula to this tap
         type: boolean
         default: false
 permissions:
@@ -29,7 +29,7 @@ jobs:
         run: |
           brew install node
           echo "$(brew --prefix node)/bin" >> "$GITHUB_PATH"
-      - name: Download and verify the public source release
+      - name: Download and verify the public Servicemon source release
         working-directory: ${{ runner.temp }}
         run: |
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]
@@ -46,7 +46,7 @@ jobs:
             --manifest manifest.json \
             --tap "$RUNNER_TEMP/checked-tap" \
             --url "$base/servicemon-$VERSION-source.tar.gz"
-      - name: Check public download and installed formula
+      - name: Check public download and installed Servicemon formula
         run: |
           brew tap-new --no-git servicemon/release
           cp "$RUNNER_TEMP/checked-tap/Formula/servicemon.rb" "$(brew --repository servicemon/release)/Formula/servicemon.rb"
@@ -78,7 +78,7 @@ jobs:
         with:
           name: checked-formula
           path: Formula
-      - name: Commit checked formula
+      - name: Commit checked Servicemon formula
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
